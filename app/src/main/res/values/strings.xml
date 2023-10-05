@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Test Case</string>
+    <string name="trips">Trips</string>
+    <string name="list_trips">List Trips</string>
 </resources>

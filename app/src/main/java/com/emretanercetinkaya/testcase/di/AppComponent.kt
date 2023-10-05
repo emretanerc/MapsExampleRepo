@@ -1,5 +1,6 @@
 package com.emretanercetinkaya.testcase.di
 
+import com.emretanercetinkaya.testcase.ui.stationsmapfragment.StationsMapModule
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjector
@@ -8,7 +9,7 @@ import javax.inject.Singleton
 
 
 @Singleton
-@Component(modules = [AndroidSupportInjectionModule::class, ActivityBindingModule::class])
+@Component(modules = [AndroidSupportInjectionModule::class, ActivityBindingModule::class,StationsMapModule::class])
 interface AppComponent : AndroidInjector<MainApplication?> {
 
     override fun inject(application: MainApplication?)

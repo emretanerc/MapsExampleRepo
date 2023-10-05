@@ -8,7 +8,7 @@ data class StationsResponseModel (
     val id: Long,
     val name: String,
     val trips: List<Trip>,
-    val tripsCount: Long
+    val trips_count: Long
 ) {
      fun getLatLng(): LatLng {
         val parts = center_coordinates.split(",")

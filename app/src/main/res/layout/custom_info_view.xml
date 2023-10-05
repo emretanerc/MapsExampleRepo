@@ -1,0 +1,21 @@
+<!-- custom_info_window.xml -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/custom_info_view_background"
+    android:orientation="vertical"
+    android:paddingEnd="12sp"
+    android:paddingStart="12sp"
+    android:paddingBottom="6sp"
+    android:paddingTop="6sp">
+
+    <!-- Diğer info penceresi içeriği burada yer alır -->
+    <TextView
+        android:id="@+id/titleTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TextView"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textStyle="bold" />
+</LinearLayout>
