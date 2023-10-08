@@ -18,12 +18,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.emretanercetinkaya.testcase.MainActivity
 import com.emretanercetinkaya.testcase.databinding.FragmentTripListBinding
 import com.emretanercetinkaya.testcase.model.CustomMarkerData
+import com.emretanercetinkaya.testcase.utils.Constants.TRIPS_BUNDLE_NAME
 import com.emretanercetinkaya.testcase.utils.isInternetAvaiable
 import kotlinx.coroutines.runBlocking
 
 
 class TripListFragment : Fragment() {
-    var internetProblemDialog : Dialog? = null
+    var internetProblemDialog: Dialog? = null
     private lateinit var bindingTripList: FragmentTripListBinding
     private lateinit var viewModel: TripListViewModel
     private var tripListModel: CustomMarkerData? = null
@@ -36,12 +37,16 @@ class TripListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
         bindingTripList = FragmentTripListBinding.inflate(inflater, container, false)
+
+        //Getting Trips List
         val bundle = arguments
-        tripListModel = bundle?.getParcelable("tripListData")
-        fetchRoutes()
+        tripListModel = bundle?.getParcelable(TRIPS_BUNDLE_NAME)
+
+        displayTrips()
 
         val networkStatusLiveData = isInternetAvaiable(requireContext())
         networkStatusLiveData.observe(viewLifecycleOwner, Observer { isConnected ->
+            //Internet Checking
             if (!isConnected) {
                 if (internetProblemDialog != null) {
                     internetProblemDialog!!.show()
@@ -60,18 +65,21 @@ class TripListFragment : Fragment() {
         return bindingTripList.root
     }
 
-     fun fetchRoutes() {
+    private fun displayTrips() {
         if (tripListModel != null) {
+
             val llm = LinearLayoutManager(context)
             val itemDecoration = DividerItemDecoration(requireContext(), llm.orientation)
             bindingTripList.tripsRV.layoutManager = llm
             bindingTripList.tripsRV.addItemDecoration(itemDecoration)
+
             bindingTripList.tripsRV.adapter = TripAdapter(tripListModel!!.trips) { it ->
                 bindingTripList.progressBar.visibility = View.VISIBLE
                 val stationId = tripListModel!!.stationId
                 val tripId = it.id
-                viewModel.tripBooking(stationId,tripId) {
-                    if (it) {
+                viewModel.tripBooking(stationId, tripId) { isSuccesfull ->
+                    //Reservation Control
+                    if (isSuccesfull) {
                         bindingTripList.progressBar.visibility = View.GONE
                         runBlocking {
                             (requireActivity() as MainActivity).saveBookTrip(tripListModel!!)
@@ -82,14 +90,14 @@ class TripListFragment : Fragment() {
                             (requireActivity() as MainActivity).clearDataStore()
                         }
                         bindingTripList.progressBar.visibility = View.GONE
+                        //Error Popup Display
                         val dialogFragment = FullTripCustomDialog()
-                        dialogFragment.show(requireActivity().supportFragmentManager,"FullTripDialog")
+                        dialogFragment.show(requireActivity().supportFragmentManager, "FullTripDialog")
                     }
                 }
             }
         }
     }
-
 
 }
 

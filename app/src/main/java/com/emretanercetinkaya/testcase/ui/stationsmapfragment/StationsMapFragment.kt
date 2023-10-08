@@ -26,6 +26,7 @@ import com.emretanercetinkaya.testcase.MainActivity
 import com.emretanercetinkaya.testcase.R
 import com.emretanercetinkaya.testcase.databinding.FragmentStationsMapBinding
 import com.emretanercetinkaya.testcase.model.CustomMarkerData
+import com.emretanercetinkaya.testcase.utils.Constants.TRIPS_BUNDLE_NAME
 import com.emretanercetinkaya.testcase.utils.isInternetAvaiable
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -39,7 +40,7 @@ import kotlinx.coroutines.runBlocking
 
 
 class StationsMapFragment : Fragment(), OnMapReadyCallback {
-    var internetProblemDialog : Dialog? = null
+    var internetProblemDialog: Dialog? = null
     val markerList = mutableListOf<Marker>()
     private lateinit var bindingStations: FragmentStationsMapBinding
     private lateinit var viewModel: StationsMapViewModel
@@ -63,6 +64,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
         mapFragment.getMapAsync(this)
 
         bindingStations.progressBar.visibility = View.VISIBLE
+
         selectedPointBitmap = generateSmallIcon(requireContext(), R.drawable.selectedpoint)
         defaultPointBitmap = generateSmallIcon(requireContext(), R.drawable.point)
         bookedPointBitmap = generateSmallIcon(requireContext(), R.drawable.completed)
@@ -73,8 +75,9 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
                 if (selectedMarker == item) {
                     val customData = item.tag as? CustomMarkerData
                     if (customData != null) {
+                        //Sending the Trips list to the other screen via Bundle
                         val bundle = Bundle()
-                        bundle.putParcelable("tripListData", customData)
+                        bundle.putParcelable(TRIPS_BUNDLE_NAME, customData)
                         view?.let { it1 -> Navigation.findNavController(it1).navigate(R.id.action_stationsMapFragment_to_tripListFragment, bundle) };
                     }
                 }
@@ -83,17 +86,18 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
 
         val networkStatusLiveData = isInternetAvaiable(requireContext())
         networkStatusLiveData.observe(viewLifecycleOwner, Observer { isConnected ->
-             if (!isConnected) {
-                 if (internetProblemDialog != null) {
-                     internetProblemDialog!!.show()
-                 } else {
-                     internetProblemDialog = Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen)
-                     internetProblemDialog!!.setContentView(R.layout.internet_problem_view)
-                     internetProblemDialog!!.show()
-                 }
-            }  else {
-                 if (markerList.size == 0) viewModel.getStationsFromRemote()
-                 if (internetProblemDialog != null) internetProblemDialog!!.dismiss()
+            //Checking Internet
+            if (!isConnected) {
+                if (internetProblemDialog != null) {
+                    internetProblemDialog!!.show()
+                } else {
+                    internetProblemDialog = Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+                    internetProblemDialog!!.setContentView(R.layout.internet_problem_view)
+                    internetProblemDialog!!.show()
+                }
+            } else {
+                if (markerList.size == 0) viewModel.getStationsFromRemote()
+                if (internetProblemDialog != null) internetProblemDialog!!.dismiss()
             }
         })
 
@@ -108,6 +112,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
         })
 
         googleMap.setOnMapClickListener {
+            //We hide the button when the map is clicked & marker default image
             if (selectedMarker != null) {
                 selectedMarker!!.setIcon(BitmapDescriptorFactory.fromBitmap(defaultPointBitmap))
             }
@@ -121,6 +126,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
             }
 
             override fun getInfoWindow(marker: Marker): View? {
+                // Custom Info Panel
                 val view = layoutInflater.inflate(R.layout.custom_info_view, null)
                 val titleTextView = view.findViewById<TextView>(R.id.titleTextView)
                 titleTextView.setText(marker.title)
@@ -135,9 +141,11 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
             for (item in markerList) {
                 val markerInfo = item.tag as CustomMarkerData
                 if (marker == item) {
+                    //Changing the image of the clicked marker
                     item.setIcon(BitmapDescriptorFactory.fromBitmap(selectedPointBitmap))
                     selectedMarker = item
                 } else {
+                    //We turn other markers into default images.
                     if (markerInfo.isBooked) {
                         item.setIcon(BitmapDescriptorFactory.fromBitmap(bookedPointBitmap))
                     } else {
@@ -158,11 +166,13 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
             val location = bestProvider?.let { locationManager.getLastKnownLocation(it) }
             if (location != null) {
                 if (isShowingFirstTimeScreen) {
+                    // Zooming User's Real Location
                     val latLng = LatLng(location.latitude, location.longitude)
                     googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 12f))
                     isShowingFirstTimeScreen = false
                 }
             } else {
+                //About the Map Zooming to Istanbul if permission is not given for Case Study
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(41.039451535657044, 29.02118376413845), 12f))
             }
         } else {
@@ -177,6 +187,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         if (selectedMarker != null) runBlocking {
+            //We pull the successful reservation from the DataStore
             val bookedStation: CustomMarkerData? = (activity as MainActivity).getBookedTrip()
             if (bookedStation != null) {
                 mMap.clear()
@@ -194,6 +205,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                //If the user gives permission, the map is refreshed.
                 onMapReady(mMap)
             }
         }
@@ -201,6 +213,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
 
 
     private fun addMarkers(stationList: ArrayList<CustomMarkerData>, googleMap: GoogleMap) {
+        //Markers are created from the list
         stationList.map { stations ->
             val markerOptions = MarkerOptions()
             markerOptions.position(stations.position)
@@ -213,6 +226,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
                     marker.setIcon(BitmapDescriptorFactory.fromBitmap(defaultPointBitmap))
                 }
                 marker.title = customData.title
+                //Stores the Trips list in the "Tag" section of the Marker
                 marker.tag = customData
                 markerList.add(marker)
             }
@@ -221,6 +235,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun generateSmallIcon(context: Context, resourceId: Int): Bitmap {
+        //Create Marker Icons
         val height = 100
         val width = 100
         val bitmap = BitmapFactory.decodeResource(context.resources, resourceId)
