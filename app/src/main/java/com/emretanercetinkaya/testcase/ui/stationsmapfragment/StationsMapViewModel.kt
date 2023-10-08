@@ -50,10 +50,11 @@ class StationsMapViewModel(application: Application) : AndroidViewModel(applicat
         for (item in localMarkerList) {
             if (item.stationId == stationId) {
                 item.isBooked = true
-                _markersLiveData.postValue(localMarkerList)
-                break;
+            } else {
+                if (item.isBooked) item.isBooked = false
             }
         }
+        _markersLiveData.postValue(localMarkerList)
     }
 
 }
