@@ -2,4 +2,7 @@
     <string name="app_name">Test Case</string>
     <string name="trips">Trips</string>
     <string name="list_trips">List Trips</string>
-</resources>
+    <string name="trip_full_main_message">The trip you selected is full.</string>
+    <string name="trip_full_alt_message">Please select another one.</string>
+    <string name="select_a_trip">Select a Trip</string>
+    </resources>
