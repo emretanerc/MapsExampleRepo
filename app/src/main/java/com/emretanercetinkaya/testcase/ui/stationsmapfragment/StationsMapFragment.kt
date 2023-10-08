@@ -1,6 +1,7 @@
 package com.emretanercetinkaya.testcase.ui.stationsmapfragment
 
 import android.Manifest
+import android.app.Dialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -9,12 +10,12 @@ import android.location.Criteria
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -38,6 +39,7 @@ import kotlinx.coroutines.runBlocking
 
 
 class StationsMapFragment : Fragment(), OnMapReadyCallback {
+    var internetProblemDialog : Dialog? = null
     val markerList = mutableListOf<Marker>()
     private lateinit var bindingStations: FragmentStationsMapBinding
     private lateinit var viewModel: StationsMapViewModel
@@ -55,14 +57,16 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         bindingStations = FragmentStationsMapBinding.inflate(inflater, container, false)
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        bindingStations.progressBar.visibility = View.VISIBLE
         selectedPointBitmap = generateSmallIcon(requireContext(), R.drawable.selectedpoint)
         defaultPointBitmap = generateSmallIcon(requireContext(), R.drawable.point)
         bookedPointBitmap = generateSmallIcon(requireContext(), R.drawable.completed)
+
 
         bindingStations.listTripsButton.setOnClickListener {
             for (item in markerList) {
@@ -79,8 +83,17 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
 
         val networkStatusLiveData = isInternetAvaiable(requireContext())
         networkStatusLiveData.observe(viewLifecycleOwner, Observer { isConnected ->
-            if (!isConnected) {
-                TODO() // Internet Control
+             if (!isConnected) {
+                 if (internetProblemDialog != null) {
+                     internetProblemDialog!!.show()
+                 } else {
+                     internetProblemDialog = Dialog(requireContext(), android.R.style.Theme_Black_NoTitleBar_Fullscreen)
+                     internetProblemDialog!!.setContentView(R.layout.internet_problem_view)
+                     internetProblemDialog!!.show()
+                 }
+            }  else {
+                 if (markerList.size == 0) viewModel.getStationsFromRemote()
+                 if (internetProblemDialog != null) internetProblemDialog!!.dismiss()
             }
         })
 
@@ -90,6 +103,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         viewModel.markerList.observe(viewLifecycleOwner, Observer { stations ->
+            bindingStations.progressBar.visibility = View.VISIBLE
             addMarkers(stations, googleMap)
         })
 
@@ -203,6 +217,7 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
                 markerList.add(marker)
             }
         }
+        bindingStations.progressBar.visibility = View.GONE
     }
 
     private fun generateSmallIcon(context: Context, resourceId: Int): Bitmap {
@@ -211,6 +226,5 @@ class StationsMapFragment : Fragment(), OnMapReadyCallback {
         val bitmap = BitmapFactory.decodeResource(context.resources, resourceId)
         return Bitmap.createScaledBitmap(bitmap, width, height, false)
     }
-
 
 }

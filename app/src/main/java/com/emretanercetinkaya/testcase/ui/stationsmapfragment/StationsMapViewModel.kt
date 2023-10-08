@@ -23,11 +23,8 @@ class StationsMapViewModel(application: Application) : AndroidViewModel(applicat
     val markerList: LiveData<ArrayList<CustomMarkerData>>
         get() = _markersLiveData
 
-    init {
-        getStationsFromRemote()
-    }
 
-    private fun getStationsFromRemote() {
+     fun getStationsFromRemote() {
         viewModelScope.launch(Dispatchers.IO) {
             ApiClient().getStations().enqueue(object : Callback<List<StationsResponseModel>> {
                 override fun onResponse(call: Call<List<StationsResponseModel>>, response: Response<List<StationsResponseModel>>) {
