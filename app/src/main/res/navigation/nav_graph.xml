@@ -7,5 +7,18 @@
     <fragment
         android:id="@+id/stationsMapFragment"
         android:name="com.emretanercetinkaya.testcase.ui.stationsmapfragment.StationsMapFragment"
-        android:label="stationsMapFragment" />
+        android:label="stationsMapFragment" >
+        <action
+            android:id="@+id/action_stationsMapFragment_to_tripListFragment"
+            app:destination="@id/tripListFragment"
+            app:enterAnim="@anim/right_from"
+            app:exitAnim="@anim/stay"
+            app:popEnterAnim="@anim/stay"
+            app:popExitAnim="@anim/to_right" />
+
+    </fragment>
+    <fragment
+        android:id="@+id/tripListFragment"
+        android:name="com.emretanercetinkaya.testcase.ui.triplistfragment.TripListFragment"
+        android:label="TripListFragment" />
 </navigation>
